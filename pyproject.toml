@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "computer-vision"
+version = "0.1.0"
+description = ""
+authors = ["Pedro Cleto <cl3t0.sh@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pynetworktables = "^2021.0.0"
+robotpy = "^2022.0.51"
+opencv-python = "^4.5.5"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+pre-commit = "^2.17.0"
+mypy = "^0.931"
+isort = "^5.10.1"
+flake8 = "^4.0.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
