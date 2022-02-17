@@ -52,7 +52,7 @@ def process_target_image(
 def process_ball_image(
     frame: np.ndarray, hsv_range: HsvRange
 ) -> BallImageProcessingResponse:
-    # TODO: Implement target identification
+    # TODO: Implement ball identification
     return BallImageProcessingResponse(
         found=False,
         image_with_ball=frame,
