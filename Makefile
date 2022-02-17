@@ -19,3 +19,6 @@ init: install-pyenv-version install-poetry install-dependencies
 
 all:
 	@python -m poetry run pre-commit run --all-files
+
+run:
+	@python -m poetry run python main.py

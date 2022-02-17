@@ -6,9 +6,10 @@ authors = ["Pedro Cleto <cl3t0.sh@gmail.com>", "Breno Bertone <bertonebreno@gmai
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pynetworktables = "^2021.0.0"
-robotpy = "^2022.0.51"
 opencv-python = "^4.5.5"
+PySimpleGUI = "^4.56.0"
+dacite = "^1.6.0"
+imutils = "^0.5.4"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
