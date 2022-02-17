@@ -43,6 +43,7 @@ class LocalStorageInformation:
     distance_calculation_parameters: DistanceCalculationParameters = (
         DistanceCalculationParameters()
     )
+    switch_cameras: bool = False
 
 
 class DevMode(RobotInterface):
@@ -82,9 +83,14 @@ class DevMode(RobotInterface):
     def build_layout(
         data: LocalStorageInformation,
     ) -> typing.Tuple[str, typing.List[typing.List[sg.Element]]]:
+
         window_name = "Local Interface"
+
         calibration_status = "ON" if data.calibrating_all_cameras else "OFF"
         calibration_button_color = "green" if data.calibrating_all_cameras else "red"
+
+        switch_cameras_status = "ON" if data.switch_cameras else "OFF"
+        switch_cameras_button_color = "green" if data.switch_cameras else "red"
 
         first_row = [
             sg.Text("Calibration: "),
@@ -92,6 +98,12 @@ class DevMode(RobotInterface):
                 calibration_status,
                 button_color=calibration_button_color,
                 key="calibration_switch",
+            ),
+            sg.Text("Switch cameras: "),
+            sg.Button(
+                switch_cameras_status,
+                button_color=switch_cameras_button_color,
+                key="switch_cameras_switch",
             ),
         ]
 
@@ -303,6 +315,14 @@ class DevMode(RobotInterface):
             self.window.Element("calibration_switch").Update(
                 calibration_status, button_color=calibration_button_color
             )
+        if event == "switch_cameras_switch":
+            all_data.switch_cameras = not all_data.switch_cameras
+            switch_cameras_status = "ON" if all_data.switch_cameras else "OFF"
+            switch_cameras_button_color = "green" if all_data.switch_cameras else "red"
+            self.window.Element("switch_cameras_switch").Update(
+                switch_cameras_status, button_color=switch_cameras_button_color
+            )
+
         else:
             all_data.target_camera.hsv_range.hue.min = values["target_h_min"]
             all_data.target_camera.hsv_range.hue.max = values["target_h_max"]
@@ -342,6 +362,10 @@ class DevMode(RobotInterface):
 
     def stop_interface(self) -> None:
         self.window.close()
+
+    def should_switch_cameras(self) -> bool:
+        all_data = DevMode.extract_file(self.filepath)
+        return all_data.switch_cameras
 
     def is_calibrating_all_cameras(self) -> bool:
         all_data = DevMode.extract_file(self.filepath)

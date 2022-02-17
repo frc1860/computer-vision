@@ -56,7 +56,12 @@ def main() -> None:
         if not working:
             break
 
-        target_camera, ball_camera = cameras
+        switch_cameras = robot_interface.should_switch_cameras()
+
+        if switch_cameras:
+            ball_camera, target_camera = cameras
+        else:
+            target_camera, ball_camera = cameras
 
         is_calibrating = robot_interface.is_calibrating_all_cameras()
 

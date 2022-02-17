@@ -19,6 +19,10 @@ class RobotInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def should_switch_cameras(self) -> bool:
+        pass
+
+    @abstractmethod
     def is_calibrating_all_cameras(self) -> bool:
         pass
 
