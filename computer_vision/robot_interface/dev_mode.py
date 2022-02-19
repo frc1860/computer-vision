@@ -12,10 +12,11 @@ import PySimpleGUI as sg
 
 from computer_vision.utils.dataclass_to_json import extract_dataclass, load_dataclass
 from computer_vision.utils.internal_types import (
-    DistanceCalculationParameters,
+    BallDistanceParameters,
     HsvRange,
     Position,
     Resolution,
+    TargetDistanceParameters,
 )
 
 from .robot_interface import RobotInterface
@@ -25,7 +26,6 @@ from .robot_interface import RobotInterface
 class CameraInformation:
     is_available: bool = False
     stream_resolution: Resolution = Resolution()
-    hsv_range: HsvRange = HsvRange()
     focal_length: float = 0
     brightness: float = 0
 
@@ -35,14 +35,15 @@ class LocalStorageInformation:
     calibrating_all_cameras: bool = False
     target_camera: CameraInformation = CameraInformation()
     ball_camera: CameraInformation = CameraInformation()
+    target_hsv_range: HsvRange = HsvRange()
+    red_ball_hsv_range: HsvRange = HsvRange()
+    blue_ball_hsv_range: HsvRange = HsvRange()
     target_horizontal_angle: float = 0
     ball_horizontal_angle: float = 0
     target_position: Position = Position()
     ball_position: Position = Position()
-    launcher_angle: float = 0
-    distance_calculation_parameters: DistanceCalculationParameters = (
-        DistanceCalculationParameters()
-    )
+    target_distance_parameters: TargetDistanceParameters = TargetDistanceParameters()
+    ball_distance_parameters: BallDistanceParameters = BallDistanceParameters()
     switch_cameras: bool = False
 
 
@@ -92,7 +93,7 @@ class DevMode(RobotInterface):
         switch_cameras_status = "ON" if data.switch_cameras else "OFF"
         switch_cameras_button_color = "green" if data.switch_cameras else "red"
 
-        first_row = [
+        block_1 = [
             sg.Text("Calibration: "),
             sg.Button(
                 calibration_status,
@@ -107,7 +108,7 @@ class DevMode(RobotInterface):
             ),
         ]
 
-        first_column = [
+        block_21 = [
             [sg.Text("Target Camera")],
             [
                 sg.Text("H min: "),
@@ -116,7 +117,7 @@ class DevMode(RobotInterface):
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.target_camera.hsv_range.hue.min,
+                    default_value=data.target_hsv_range.hue.min,
                 ),
             ],
             [
@@ -126,7 +127,7 @@ class DevMode(RobotInterface):
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.target_camera.hsv_range.hue.max,
+                    default_value=data.target_hsv_range.hue.max,
                 ),
             ],
             [
@@ -136,7 +137,7 @@ class DevMode(RobotInterface):
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.target_camera.hsv_range.saturation.min,
+                    default_value=data.target_hsv_range.saturation.min,
                 ),
             ],
             [
@@ -146,7 +147,7 @@ class DevMode(RobotInterface):
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.target_camera.hsv_range.saturation.max,
+                    default_value=data.target_hsv_range.saturation.max,
                 ),
             ],
             [
@@ -156,7 +157,7 @@ class DevMode(RobotInterface):
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.target_camera.hsv_range.value.min,
+                    default_value=data.target_hsv_range.value.min,
                 ),
             ],
             [
@@ -166,95 +167,188 @@ class DevMode(RobotInterface):
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.target_camera.hsv_range.value.max,
+                    default_value=data.target_hsv_range.value.max,
                 ),
             ],
         ]
 
-        second_column = [
+        block_22 = [
             [sg.Image(filename="", key="target_image")],
             [sg.Image(filename="", key="target_binary_image")],
             [sg.Image(filename="", key="image_with_target")],
         ]
 
-        third_column = [
+        block_23 = [
             [sg.Text("Ball Camera")],
             [
                 sg.Text("H min: "),
                 sg.Slider(
-                    key="ball_h_min",
+                    key="red_ball_h_min",
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.ball_camera.hsv_range.hue.min,
+                    default_value=data.red_ball_hsv_range.hue.min,
                 ),
             ],
             [
                 sg.Text("H max: "),
                 sg.Slider(
-                    key="ball_h_max",
+                    key="red_ball_h_max",
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.ball_camera.hsv_range.hue.max,
+                    default_value=data.red_ball_hsv_range.hue.max,
                 ),
             ],
             [
                 sg.Text("S min: "),
                 sg.Slider(
-                    key="ball_s_min",
+                    key="red_ball_s_min",
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.ball_camera.hsv_range.saturation.min,
+                    default_value=data.red_ball_hsv_range.saturation.min,
                 ),
             ],
             [
                 sg.Text("S max: "),
                 sg.Slider(
-                    key="ball_s_max",
+                    key="red_ball_s_max",
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.ball_camera.hsv_range.saturation.max,
+                    default_value=data.red_ball_hsv_range.saturation.max,
                 ),
             ],
             [
                 sg.Text("V min: "),
                 sg.Slider(
-                    key="ball_v_min",
+                    key="red_ball_v_min",
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.ball_camera.hsv_range.value.min,
+                    default_value=data.red_ball_hsv_range.value.min,
                 ),
             ],
             [
                 sg.Text("V max: "),
                 sg.Slider(
-                    key="ball_v_max",
+                    key="red_ball_v_max",
                     orientation="horizontal",
                     resolution=0.1,
                     range=(0, 256),
-                    default_value=data.ball_camera.hsv_range.value.max,
+                    default_value=data.red_ball_hsv_range.value.max,
                 ),
             ],
         ]
 
-        fourth_column = [
+        block_24 = [
+            [sg.Text("")],
+            [
+                sg.Text("H min: "),
+                sg.Slider(
+                    key="blue_ball_h_min",
+                    orientation="horizontal",
+                    resolution=0.1,
+                    range=(0, 256),
+                    default_value=data.blue_ball_hsv_range.hue.min,
+                ),
+            ],
+            [
+                sg.Text("H max: "),
+                sg.Slider(
+                    key="blue_ball_h_max",
+                    orientation="horizontal",
+                    resolution=0.1,
+                    range=(0, 256),
+                    default_value=data.blue_ball_hsv_range.hue.max,
+                ),
+            ],
+            [
+                sg.Text("S min: "),
+                sg.Slider(
+                    key="blue_ball_s_min",
+                    orientation="horizontal",
+                    resolution=0.1,
+                    range=(0, 256),
+                    default_value=data.blue_ball_hsv_range.saturation.min,
+                ),
+            ],
+            [
+                sg.Text("S max: "),
+                sg.Slider(
+                    key="blue_ball_s_max",
+                    orientation="horizontal",
+                    resolution=0.1,
+                    range=(0, 256),
+                    default_value=data.blue_ball_hsv_range.saturation.max,
+                ),
+            ],
+            [
+                sg.Text("V min: "),
+                sg.Slider(
+                    key="blue_ball_v_min",
+                    orientation="horizontal",
+                    resolution=0.1,
+                    range=(0, 256),
+                    default_value=data.blue_ball_hsv_range.value.min,
+                ),
+            ],
+            [
+                sg.Text("V max: "),
+                sg.Slider(
+                    key="blue_ball_v_max",
+                    orientation="horizontal",
+                    resolution=0.1,
+                    range=(0, 256),
+                    default_value=data.blue_ball_hsv_range.value.max,
+                ),
+            ],
+        ]
+
+        block_25 = [
             [sg.Image(filename="", key="ball_image")],
             [sg.Image(filename="", key="ball_binary_image")],
             [sg.Image(filename="", key="image_with_ball")],
         ]
 
-        second_row = [
-            sg.Column(first_column),
-            sg.Column(second_column),
-            sg.Column(third_column),
-            sg.Column(fourth_column),
+        block_2 = [
+            sg.Column(block_21),
+            sg.Column(block_22),
+            sg.Column(block_23),
+            sg.Column(block_24),
+            sg.Column(block_25),
         ]
 
-        return window_name, [first_row, second_row]
+        block_3 = [
+            [sg.Text("Target distance parameters")],
+            [
+                sg.Text("a: "),
+                sg.InputText(key="target_distance_parameters_a"),
+                sg.Text("b: "),
+                sg.InputText(key="target_distance_parameters_b"),
+                sg.Text("c: "),
+                sg.InputText(key="target_distance_parameters_c"),
+                sg.Button(
+                    "SEND", button_color="green", key="send_target_distance_parameters"
+                ),
+            ],
+        ]
+
+        block_4 = [
+            [sg.Text("Ball distance parameters")],
+            [
+                sg.Text("focal length: "),
+                sg.InputText(key="ball_distance_parameters_focal_length"),
+                sg.Text("ball diameter: "),
+                sg.InputText(key="ball_distance_parameters_ball_diameter"),
+                sg.Button(
+                    "SEND", button_color="green", key="send_ball_distance_parameters"
+                ),
+            ],
+        ]
+
+        return window_name, [block_1, block_2, block_3, block_4]
 
     @staticmethod
     def file_is_empty(filepath: str) -> bool:
@@ -322,20 +416,43 @@ class DevMode(RobotInterface):
             self.window.Element("switch_cameras_switch").Update(
                 switch_cameras_status, button_color=switch_cameras_button_color
             )
-
+        if event == "send_target_distance_parameters":
+            try:
+                a = float(values["target_distance_parameters_a"])
+                b = float(values["target_distance_parameters_b"])
+                c = float(values["target_distance_parameters_c"])
+                all_data.target_distance_parameters.a = a
+                all_data.target_distance_parameters.b = b
+                all_data.target_distance_parameters.c = c
+            except Exception:
+                pass
+        if event == "send_ball_distance_parameters":
+            try:
+                focal_length = float(values["ball_distance_parameters_focal_length"])
+                ball_diameter = float(values["ball_distance_parameters_ball_diameter"])
+                all_data.ball_distance_parameters.focal_length = focal_length
+                all_data.ball_distance_parameters.ball_diameter = ball_diameter
+            except Exception:
+                pass
         else:
-            all_data.target_camera.hsv_range.hue.min = values["target_h_min"]
-            all_data.target_camera.hsv_range.hue.max = values["target_h_max"]
-            all_data.target_camera.hsv_range.saturation.min = values["target_s_min"]
-            all_data.target_camera.hsv_range.saturation.max = values["target_s_max"]
-            all_data.target_camera.hsv_range.value.min = values["target_v_min"]
-            all_data.target_camera.hsv_range.value.max = values["target_v_max"]
-            all_data.ball_camera.hsv_range.hue.min = values["ball_h_min"]
-            all_data.ball_camera.hsv_range.hue.max = values["ball_h_max"]
-            all_data.ball_camera.hsv_range.saturation.min = values["ball_s_min"]
-            all_data.ball_camera.hsv_range.saturation.max = values["ball_s_max"]
-            all_data.ball_camera.hsv_range.value.min = values["ball_v_min"]
-            all_data.ball_camera.hsv_range.value.max = values["ball_v_max"]
+            all_data.target_hsv_range.hue.min = values["target_h_min"]
+            all_data.target_hsv_range.hue.max = values["target_h_max"]
+            all_data.target_hsv_range.saturation.min = values["target_s_min"]
+            all_data.target_hsv_range.saturation.max = values["target_s_max"]
+            all_data.target_hsv_range.value.min = values["target_v_min"]
+            all_data.target_hsv_range.value.max = values["target_v_max"]
+            all_data.red_ball_hsv_range.hue.min = values["red_ball_h_min"]
+            all_data.red_ball_hsv_range.hue.max = values["red_ball_h_max"]
+            all_data.red_ball_hsv_range.saturation.min = values["red_ball_s_min"]
+            all_data.red_ball_hsv_range.saturation.max = values["red_ball_s_max"]
+            all_data.red_ball_hsv_range.value.min = values["red_ball_v_min"]
+            all_data.red_ball_hsv_range.value.max = values["red_ball_v_max"]
+            all_data.blue_ball_hsv_range.hue.min = values["blue_ball_h_min"]
+            all_data.blue_ball_hsv_range.hue.max = values["blue_ball_h_max"]
+            all_data.blue_ball_hsv_range.saturation.min = values["blue_ball_s_min"]
+            all_data.blue_ball_hsv_range.saturation.max = values["blue_ball_s_max"]
+            all_data.blue_ball_hsv_range.value.min = values["blue_ball_v_min"]
+            all_data.blue_ball_hsv_range.value.max = values["blue_ball_v_max"]
 
             self.window.Element("target_image").update(
                 data=self.target_camera_last_frame
@@ -380,33 +497,85 @@ class DevMode(RobotInterface):
         return all_data.ball_camera.stream_resolution
 
     def send_target_camera_frame(self, frame: np.ndarray) -> None:
-        resized_frame = imutils.resize(frame, height=150)
+        resized_frame = imutils.resize(frame, height=100)
         self.target_camera_last_frame = cv2.imencode(".png", resized_frame)[1].tobytes()
 
     def send_ball_camera_frame(self, frame: np.ndarray) -> None:
-        resized_frame = imutils.resize(frame, height=150)
+        resized_frame = imutils.resize(frame, height=100)
         self.ball_camera_last_frame = cv2.imencode(".png", resized_frame)[1].tobytes()
 
     def send_target_binary_frame(self, frame: np.ndarray) -> None:
-        resized_frame = imutils.resize(frame, height=150)
+        resized_frame = imutils.resize(frame, height=100)
         self.target_binary_last_frame = cv2.imencode(".png", resized_frame)[1].tobytes()
 
     def send_ball_binary_frame(self, frame: np.ndarray) -> None:
-        resized_frame = imutils.resize(frame, height=150)
+        resized_frame = imutils.resize(frame, height=100)
         self.ball_binary_last_frame = cv2.imencode(".png", resized_frame)[1].tobytes()
 
     def send_frame_with_target(self, frame: np.ndarray) -> None:
-        resized_frame = imutils.resize(frame, height=150)
+        resized_frame = imutils.resize(frame, height=100)
         self.last_frame_with_target = cv2.imencode(".png", resized_frame)[1].tobytes()
 
     def send_frame_with_ball(self, frame: np.ndarray) -> None:
-        resized_frame = imutils.resize(frame, height=150)
+        resized_frame = imutils.resize(frame, height=100)
         self.last_frame_with_ball = cv2.imencode(".png", resized_frame)[1].tobytes()
 
-    def get_target_camera_hsv_range(self) -> HsvRange:
+    def get_target_hsv_range(self) -> HsvRange:
         all_data = DevMode.extract_file(self.filepath)
-        return all_data.target_camera.hsv_range
+        return all_data.target_hsv_range
 
-    def get_ball_camera_hsv_range(self) -> HsvRange:
+    def get_red_ball_hsv_range(self) -> HsvRange:
         all_data = DevMode.extract_file(self.filepath)
-        return all_data.ball_camera.hsv_range
+        return all_data.red_ball_hsv_range
+
+    def get_blue_ball_hsv_range(self) -> HsvRange:
+        all_data = DevMode.extract_file(self.filepath)
+        return all_data.blue_ball_hsv_range
+
+    def get_target_distance_parameters(self) -> TargetDistanceParameters:
+        all_data = DevMode.extract_file(self.filepath)
+        return all_data.target_distance_parameters
+
+    def get_ball_distance_parameters(self) -> BallDistanceParameters:
+        all_data = DevMode.extract_file(self.filepath)
+        return all_data.ball_distance_parameters
+
+    def get_target_camera_focal_length(self) -> float:
+        # TODO: Implement get_target_camera_focal_length in DevMode
+        return 1
+
+    def get_ball_camera_focal_length(self) -> float:
+        # TODO: Implement get_ball_camera_focal_length in DevMode
+        return 1
+
+    def get_ball_color(self) -> typing.Literal["red", "blue"]:
+        # TODO: Implement get_ball_color in DevMode
+        return "red"
+
+    def send_target_angle(self, angle: float) -> None:
+        # TODO: Implement send_target_angle in DevMode
+        pass
+
+    def send_ball_angle(self, angle: float) -> None:
+        # TODO: Implement send_ball_angle in DevMode
+        pass
+
+    def send_target_distance(self, distance: float) -> None:
+        # TODO: Implement send_target_distance in DevMode
+        pass
+
+    def send_ball_distance(self, distance: float) -> None:
+        # TODO: Implement send_ball_distance in DevMode
+        pass
+
+    def send_if_target_was_found(self, found: bool) -> None:
+        # TODO: Implement send_if_target_was_found in DevMode
+        pass
+
+    def send_if_ball_was_found(self, found: bool) -> None:
+        # TODO: Implement send_if_ball_was_found in DevMode
+        pass
+
+    def send_launcher_angle(self, angle: float) -> None:
+        # TODO: Implement send_launcher_angle in DevMode
+        pass
