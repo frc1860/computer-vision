@@ -81,6 +81,14 @@ class DevMode(RobotInterface):
         self.last_frame_with_target: typing.Optional[np.ndarray] = None
         self.last_frame_with_ball: typing.Optional[np.ndarray] = None
 
+        self.target_angle: float = 0
+        self.ball_angle: float = 0
+        self.target_distance: float = 0
+        self.ball_distance: float = 0
+        self.target_found: float = 0
+        self.ball_found: float = 0
+        self.launcher_angle: float = 0
+
     @staticmethod
     def build_layout(
         data: LocalStorageInformation,
@@ -116,7 +124,7 @@ class DevMode(RobotInterface):
         ]
 
         block_21 = [
-            [sg.Text("Target Camera", font="bold")],
+            [sg.Text("Target HSV range", font="bold")],
             [
                 sg.Text("H min: "),
                 sg.Slider(
@@ -186,7 +194,8 @@ class DevMode(RobotInterface):
         ]
 
         block_23 = [
-            [sg.Text("Ball Camera", font="bold")],
+            [sg.Text("Ball HSV range", font="bold")],
+            [sg.Text("Red ball")],
             [
                 sg.Text("H min: "),
                 sg.Slider(
@@ -251,6 +260,7 @@ class DevMode(RobotInterface):
 
         block_24 = [
             [sg.Text("")],
+            [sg.Text("Blue ball")],
             [
                 sg.Text("H min: "),
                 sg.Slider(
@@ -387,7 +397,32 @@ class DevMode(RobotInterface):
             ],
         ]
 
-        return window_name, [block_1, block_2, block_3, block_4, block_5]
+        block_61 = [
+            [sg.Text("Target was found: NO", key="target_found")],
+            [sg.Text("Ball was found: NO", key="ball_found")],
+        ]
+
+        block_62 = [
+            [sg.Text("Target distance: --cm", key="target_distance")],
+            [sg.Text("Ball distance: --cm", key="ball_distance")],
+        ]
+
+        block_63 = [
+            [sg.Text("Target angle: --°", key="target_angle")],
+            [sg.Text("Ball angle: --°", key="ball_angle")],
+        ]
+
+        block_64 = [[sg.Text("Launcher angle: --°", key="launcher_angle")]]
+
+        block_6 = [
+            [sg.Text("Results", font="bold")],
+            sg.Column(block_61),
+            sg.Column(block_62),
+            sg.Column(block_63),
+            sg.Column(block_64),
+        ]
+
+        return window_name, [block_1, block_2, block_3, block_4, block_5, block_6]
 
     @staticmethod
     def file_is_empty(filepath: str) -> bool:
@@ -525,6 +560,50 @@ class DevMode(RobotInterface):
                 data=self.last_frame_with_ball
             )
 
+            self.window["target_found"].update(
+                f"Target was found: {str(self.target_found).upper()}"
+            )
+
+            self.window["ball_found"].update(
+                f"Ball was found: {str(self.ball_found).upper()}"
+            )
+
+            if self.target_found:
+
+                self.window["target_distance"].update(
+                    f"Target distance: {self.target_distance}cm"
+                )
+
+                self.window["target_angle"].update(
+                    f"Target angle: {self.target_angle}°"
+                )
+
+                self.window["launcher_angle"].update(
+                    f"Launcher angle: {self.launcher_angle}°"
+                )
+
+            else:
+
+                self.window["target_distance"].update("Target distance: --cm")
+
+                self.window["target_angle"].update("Target angle: --°")
+
+                self.window["launcher_angle"].update("Launcher angle: --°")
+
+            if self.ball_found:
+
+                self.window["ball_distance"].update(
+                    f"Ball distance: {self.ball_distance}cm"
+                )
+
+                self.window["ball_angle"].update(f"Ball angle: {self.ball_angle}°")
+
+            else:
+
+                self.window["ball_distance"].update("Ball distance: --cm")
+
+                self.window["ball_angle"].update("Ball angle: --°")
+
         DevMode.load_file(self.filepath, all_data)
 
         return True
@@ -605,29 +684,22 @@ class DevMode(RobotInterface):
         return all_data.ball_color
 
     def send_target_angle(self, angle: float) -> None:
-        # TODO: Implement send_target_angle in DevMode
-        pass
+        self.target_angle = angle
 
     def send_ball_angle(self, angle: float) -> None:
-        # TODO: Implement send_ball_angle in DevMode
-        pass
+        self.ball_angle = angle
 
     def send_target_distance(self, distance: float) -> None:
-        # TODO: Implement send_target_distance in DevMode
-        pass
+        self.target_distance = distance
 
     def send_ball_distance(self, distance: float) -> None:
-        # TODO: Implement send_ball_distance in DevMode
-        pass
+        self.ball_distance = distance
 
     def send_if_target_was_found(self, found: bool) -> None:
-        # TODO: Implement send_if_target_was_found in DevMode
-        pass
+        self.target_found = found
 
     def send_if_ball_was_found(self, found: bool) -> None:
-        # TODO: Implement send_if_ball_was_found in DevMode
-        pass
+        self.ball_found = found
 
     def send_launcher_angle(self, angle: float) -> None:
-        # TODO: Implement send_launcher_angle in DevMode
-        pass
+        self.launcher_angle = angle
