@@ -58,4 +58,5 @@ def process_ball_image(
         image_with_ball=frame,
         binary_image=frame,
         ball_position=Position(x=0, y=0),
+        ball_diameter=0,
     )

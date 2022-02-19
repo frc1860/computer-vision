@@ -29,10 +29,16 @@ class HsvRange:
 
 
 @dataclass
-class DistanceCalculationParameters:
+class TargetDistanceParameters:
     a: float = 0
     b: float = 0
     c: float = 0
+
+
+@dataclass
+class BallDistanceParameters:
+    focal_length: float = 0
+    ball_diameter: float = 0
 
 
 @dataclass
@@ -49,3 +55,4 @@ class BallImageProcessingResponse:
     image_with_ball: np.ndarray
     binary_image: np.ndarray
     ball_position: Position
+    ball_diameter: float

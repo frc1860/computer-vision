@@ -1,8 +1,14 @@
+import typing
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from computer_vision.utils.internal_types import HsvRange, Resolution
+from computer_vision.utils.internal_types import (
+    BallDistanceParameters,
+    HsvRange,
+    Resolution,
+    TargetDistanceParameters,
+)
 
 
 class RobotInterface(metaclass=ABCMeta):
@@ -59,9 +65,61 @@ class RobotInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_target_camera_hsv_range(self) -> HsvRange:
+    def get_target_hsv_range(self) -> HsvRange:
         pass
 
     @abstractmethod
-    def get_ball_camera_hsv_range(self) -> HsvRange:
+    def get_red_ball_hsv_range(self) -> HsvRange:
+        pass
+
+    @abstractmethod
+    def get_blue_ball_hsv_range(self) -> HsvRange:
+        pass
+
+    @abstractmethod
+    def get_target_distance_parameters(self) -> TargetDistanceParameters:
+        pass
+
+    @abstractmethod
+    def get_ball_distance_parameters(self) -> BallDistanceParameters:
+        pass
+
+    @abstractmethod
+    def get_target_camera_focal_length(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_ball_camera_focal_length(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_ball_color(self) -> typing.Literal["red", "blue"]:
+        pass
+
+    @abstractmethod
+    def send_target_angle(self, angle: float) -> None:
+        pass
+
+    @abstractmethod
+    def send_ball_angle(self, angle: float) -> None:
+        pass
+
+    @abstractmethod
+    def send_target_distance(self, distance: float) -> None:
+        pass
+
+    @abstractmethod
+    def send_ball_distance(self, distance: float) -> None:
+        pass
+
+    @abstractmethod
+    def send_if_target_was_found(self, found: bool) -> None:
+        pass
+
+    @abstractmethod
+    def send_if_ball_was_found(self, found: bool) -> None:
+        pass
+
+    @abstractmethod
+    def send_launcher_angle(self, angle: float) -> None:
         pass
