@@ -348,7 +348,18 @@ class DevMode(RobotInterface):
             ],
         ]
 
-        return window_name, [block_1, block_2, block_3, block_4]
+        block_5 = [
+            [sg.Text("Focal lengths")],
+            [
+                sg.Text("Target camera: "),
+                sg.InputText(key="target_camera_focal_length"),
+                sg.Text("Ball camera: "),
+                sg.InputText(key="ball_camera_focal_length"),
+                sg.Button("SEND", button_color="green", key="send_focal_lengths"),
+            ],
+        ]
+
+        return window_name, [block_1, block_2, block_3, block_4, block_5]
 
     @staticmethod
     def file_is_empty(filepath: str) -> bool:
@@ -400,7 +411,7 @@ class DevMode(RobotInterface):
 
         if event == sg.WIN_CLOSED:
             return False
-        if event == "calibration_switch":
+        elif event == "calibration_switch":
             all_data.calibrating_all_cameras = not all_data.calibrating_all_cameras
             calibration_status = "ON" if all_data.calibrating_all_cameras else "OFF"
             calibration_button_color = (
@@ -409,14 +420,14 @@ class DevMode(RobotInterface):
             self.window.Element("calibration_switch").Update(
                 calibration_status, button_color=calibration_button_color
             )
-        if event == "switch_cameras_switch":
+        elif event == "switch_cameras_switch":
             all_data.switch_cameras = not all_data.switch_cameras
             switch_cameras_status = "ON" if all_data.switch_cameras else "OFF"
             switch_cameras_button_color = "green" if all_data.switch_cameras else "red"
             self.window.Element("switch_cameras_switch").Update(
                 switch_cameras_status, button_color=switch_cameras_button_color
             )
-        if event == "send_target_distance_parameters":
+        elif event == "send_target_distance_parameters":
             try:
                 a = float(values["target_distance_parameters_a"])
                 b = float(values["target_distance_parameters_b"])
@@ -426,12 +437,20 @@ class DevMode(RobotInterface):
                 all_data.target_distance_parameters.c = c
             except Exception:
                 pass
-        if event == "send_ball_distance_parameters":
+        elif event == "send_ball_distance_parameters":
             try:
                 focal_length = float(values["ball_distance_parameters_focal_length"])
                 ball_diameter = float(values["ball_distance_parameters_ball_diameter"])
                 all_data.ball_distance_parameters.focal_length = focal_length
                 all_data.ball_distance_parameters.ball_diameter = ball_diameter
+            except Exception:
+                pass
+        elif event == "send_focal_lengths":
+            try:
+                target_camera_focal_length = float(values["target_camera_focal_length"])
+                ball_camera_focal_length = float(values["ball_camera_focal_length"])
+                all_data.target_camera.focal_length = target_camera_focal_length
+                all_data.ball_camera.focal_length = ball_camera_focal_length
             except Exception:
                 pass
         else:
@@ -541,12 +560,12 @@ class DevMode(RobotInterface):
         return all_data.ball_distance_parameters
 
     def get_target_camera_focal_length(self) -> float:
-        # TODO: Implement get_target_camera_focal_length in DevMode
-        return 1
+        all_data = DevMode.extract_file(self.filepath)
+        return all_data.target_camera.focal_length
 
     def get_ball_camera_focal_length(self) -> float:
-        # TODO: Implement get_ball_camera_focal_length in DevMode
-        return 1
+        all_data = DevMode.extract_file(self.filepath)
+        return all_data.ball_camera.focal_length
 
     def get_ball_color(self) -> typing.Literal["red", "blue"]:
         # TODO: Implement get_ball_color in DevMode
