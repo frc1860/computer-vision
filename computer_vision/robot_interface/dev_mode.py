@@ -45,6 +45,7 @@ class LocalStorageInformation:
     target_distance_parameters: TargetDistanceParameters = TargetDistanceParameters()
     ball_distance_parameters: BallDistanceParameters = BallDistanceParameters()
     switch_cameras: bool = False
+    ball_color: typing.Literal["red", "blue"] = "red"
 
 
 class DevMode(RobotInterface):
@@ -105,6 +106,12 @@ class DevMode(RobotInterface):
                 switch_cameras_status,
                 button_color=switch_cameras_button_color,
                 key="switch_cameras_switch",
+            ),
+            sg.Text("Ball color: "),
+            sg.Button(
+                data.ball_color.upper(),
+                button_color=data.ball_color,
+                key="ball_color_switch",
             ),
         ]
 
@@ -448,6 +455,11 @@ class DevMode(RobotInterface):
             self.window.Element("switch_cameras_switch").Update(
                 switch_cameras_status, button_color=switch_cameras_button_color
             )
+        elif event == "ball_color_switch":
+            all_data.ball_color = "red" if all_data.ball_color == "blue" else "blue"
+            self.window.Element("ball_color_switch").Update(
+                all_data.ball_color.upper(), button_color=all_data.ball_color
+            )
         elif event == "send_target_distance_parameters":
             try:
                 a = float(values["target_distance_parameters_a"])
@@ -589,8 +601,8 @@ class DevMode(RobotInterface):
         return all_data.ball_camera.focal_length
 
     def get_ball_color(self) -> typing.Literal["red", "blue"]:
-        # TODO: Implement get_ball_color in DevMode
-        return "red"
+        all_data = DevMode.extract_file(self.filepath)
+        return all_data.ball_color
 
     def send_target_angle(self, angle: float) -> None:
         # TODO: Implement send_target_angle in DevMode
