@@ -461,6 +461,176 @@ class DevMode(RobotInterface):
                 time.sleep(1)
         raise DevMode.FailedToLoadDataclass(data)
 
+    @staticmethod
+    def _switch_calibration_button(
+        window: sg.Window,
+        _: typing.Dict[str, typing.Any],
+        all_data: LocalStorageInformation,
+    ) -> bool:
+        all_data.calibrating_all_cameras = not all_data.calibrating_all_cameras
+        calibration_status = "ON" if all_data.calibrating_all_cameras else "OFF"
+        calibration_button_color = (
+            "green" if all_data.calibrating_all_cameras else "red"
+        )
+        window.Element("calibration_switch").Update(
+            calibration_status, button_color=calibration_button_color
+        )
+        return True
+
+    @staticmethod
+    def _switch_cameras_button(
+        window: sg.Window,
+        _: typing.Dict[str, typing.Any],
+        all_data: LocalStorageInformation,
+    ) -> bool:
+        all_data.switch_cameras = not all_data.switch_cameras
+        switch_cameras_status = "ON" if all_data.switch_cameras else "OFF"
+        switch_cameras_button_color = "green" if all_data.switch_cameras else "red"
+        window.Element("switch_cameras_switch").Update(
+            switch_cameras_status, button_color=switch_cameras_button_color
+        )
+        return True
+
+    @staticmethod
+    def _switch_ball_color_button(
+        window: sg.Window,
+        _: typing.Dict[str, typing.Any],
+        all_data: LocalStorageInformation,
+    ) -> bool:
+        all_data.ball_color = "red" if all_data.ball_color == "blue" else "blue"
+        window.Element("ball_color_switch").Update(
+            all_data.ball_color.upper(), button_color=all_data.ball_color
+        )
+        return True
+
+    @staticmethod
+    def _refresh_target_distance_parameters(
+        _: sg.Window,
+        values: typing.Dict[str, typing.Any],
+        all_data: LocalStorageInformation,
+    ) -> bool:
+        try:
+            a = float(values["target_distance_parameters_a"])
+            b = float(values["target_distance_parameters_b"])
+            c = float(values["target_distance_parameters_c"])
+            all_data.target_distance_parameters.a = a
+            all_data.target_distance_parameters.b = b
+            all_data.target_distance_parameters.c = c
+        except Exception:
+            pass
+        return True
+
+    @staticmethod
+    def _refresh_ball_distance_parameters(
+        _: sg.Window,
+        values: typing.Dict[str, typing.Any],
+        all_data: LocalStorageInformation,
+    ) -> bool:
+        try:
+            focal_length = float(values["ball_distance_parameters_focal_length"])
+            ball_diameter = float(values["ball_distance_parameters_ball_diameter"])
+            all_data.ball_distance_parameters.focal_length = focal_length
+            all_data.ball_distance_parameters.ball_diameter = ball_diameter
+        except Exception:
+            pass
+        return True
+
+    @staticmethod
+    def _refresh_focal_lengths(
+        _: sg.Window,
+        values: typing.Dict[str, typing.Any],
+        all_data: LocalStorageInformation,
+    ) -> bool:
+        try:
+            target_camera_focal_length = float(values["target_camera_focal_length"])
+            ball_camera_focal_length = float(values["ball_camera_focal_length"])
+            all_data.target_camera.focal_length = target_camera_focal_length
+            all_data.ball_camera.focal_length = ball_camera_focal_length
+        except Exception:
+            pass
+        return True
+
+    def _refresh_non_reactive_elements(
+        self,
+        values: typing.Dict[str, typing.Any],
+        all_data: LocalStorageInformation,
+    ) -> None:
+        all_data.target_hsv_range.hue.min = values["target_h_min"]
+        all_data.target_hsv_range.hue.max = values["target_h_max"]
+        all_data.target_hsv_range.saturation.min = values["target_s_min"]
+        all_data.target_hsv_range.saturation.max = values["target_s_max"]
+        all_data.target_hsv_range.value.min = values["target_v_min"]
+        all_data.target_hsv_range.value.max = values["target_v_max"]
+        all_data.red_ball_hsv_range.hue.min = values["red_ball_h_min"]
+        all_data.red_ball_hsv_range.hue.max = values["red_ball_h_max"]
+        all_data.red_ball_hsv_range.saturation.min = values["red_ball_s_min"]
+        all_data.red_ball_hsv_range.saturation.max = values["red_ball_s_max"]
+        all_data.red_ball_hsv_range.value.min = values["red_ball_v_min"]
+        all_data.red_ball_hsv_range.value.max = values["red_ball_v_max"]
+        all_data.blue_ball_hsv_range.hue.min = values["blue_ball_h_min"]
+        all_data.blue_ball_hsv_range.hue.max = values["blue_ball_h_max"]
+        all_data.blue_ball_hsv_range.saturation.min = values["blue_ball_s_min"]
+        all_data.blue_ball_hsv_range.saturation.max = values["blue_ball_s_max"]
+        all_data.blue_ball_hsv_range.value.min = values["blue_ball_v_min"]
+        all_data.blue_ball_hsv_range.value.max = values["blue_ball_v_max"]
+
+        self.window.Element("target_image").update(data=self.target_camera_last_frame)
+        self.window.Element("ball_image").update(data=self.ball_camera_last_frame)
+
+        self.window.Element("target_binary_image").update(
+            data=self.target_binary_last_frame
+        )
+        self.window.Element("ball_binary_image").update(
+            data=self.ball_binary_last_frame
+        )
+
+        self.window.Element("image_with_target").update(
+            data=self.last_frame_with_target
+        )
+        self.window.Element("image_with_ball").update(data=self.last_frame_with_ball)
+
+        self.window["target_found"].update(
+            f"Target was found: {str(self.target_found).upper()}"
+        )
+
+        self.window["ball_found"].update(
+            f"Ball was found: {str(self.ball_found).upper()}"
+        )
+
+        if self.target_found:
+
+            self.window["target_distance"].update(
+                f"Target distance: {self.target_distance}cm"
+            )
+
+            self.window["target_angle"].update(f"Target angle: {self.target_angle}°")
+
+            self.window["launcher_angle"].update(
+                f"Launcher angle: {self.launcher_angle}°"
+            )
+
+        else:
+
+            self.window["target_distance"].update("Target distance: --cm")
+
+            self.window["target_angle"].update("Target angle: --°")
+
+            self.window["launcher_angle"].update("Launcher angle: --°")
+
+        if self.ball_found:
+
+            self.window["ball_distance"].update(
+                f"Ball distance: {self.ball_distance}cm"
+            )
+
+            self.window["ball_angle"].update(f"Ball angle: {self.ball_angle}°")
+
+        else:
+
+            self.window["ball_distance"].update("Ball distance: --cm")
+
+            self.window["ball_angle"].update("Ball angle: --°")
+
     def start_interface(self) -> None:
 
         all_data = DevMode.extract_file(self.filepath)
@@ -472,137 +642,30 @@ class DevMode(RobotInterface):
         all_data = DevMode.extract_file(self.filepath)
         event, values = self.window.read(timeout=10)
 
-        if event == sg.WIN_CLOSED:
-            return False
-        elif event == "calibration_switch":
-            all_data.calibrating_all_cameras = not all_data.calibrating_all_cameras
-            calibration_status = "ON" if all_data.calibrating_all_cameras else "OFF"
-            calibration_button_color = (
-                "green" if all_data.calibrating_all_cameras else "red"
-            )
-            self.window.Element("calibration_switch").Update(
-                calibration_status, button_color=calibration_button_color
-            )
-        elif event == "switch_cameras_switch":
-            all_data.switch_cameras = not all_data.switch_cameras
-            switch_cameras_status = "ON" if all_data.switch_cameras else "OFF"
-            switch_cameras_button_color = "green" if all_data.switch_cameras else "red"
-            self.window.Element("switch_cameras_switch").Update(
-                switch_cameras_status, button_color=switch_cameras_button_color
-            )
-        elif event == "ball_color_switch":
-            all_data.ball_color = "red" if all_data.ball_color == "blue" else "blue"
-            self.window.Element("ball_color_switch").Update(
-                all_data.ball_color.upper(), button_color=all_data.ball_color
-            )
-        elif event == "send_target_distance_parameters":
-            try:
-                a = float(values["target_distance_parameters_a"])
-                b = float(values["target_distance_parameters_b"])
-                c = float(values["target_distance_parameters_c"])
-                all_data.target_distance_parameters.a = a
-                all_data.target_distance_parameters.b = b
-                all_data.target_distance_parameters.c = c
-            except Exception:
-                pass
-        elif event == "send_ball_distance_parameters":
-            try:
-                focal_length = float(values["ball_distance_parameters_focal_length"])
-                ball_diameter = float(values["ball_distance_parameters_ball_diameter"])
-                all_data.ball_distance_parameters.focal_length = focal_length
-                all_data.ball_distance_parameters.ball_diameter = ball_diameter
-            except Exception:
-                pass
-        elif event == "send_focal_lengths":
-            try:
-                target_camera_focal_length = float(values["target_camera_focal_length"])
-                ball_camera_focal_length = float(values["ball_camera_focal_length"])
-                all_data.target_camera.focal_length = target_camera_focal_length
-                all_data.ball_camera.focal_length = ball_camera_focal_length
-            except Exception:
-                pass
+        actions: typing.Dict[
+            str,
+            typing.Callable[
+                [sg.Window, typing.Dict[str, typing.Any], LocalStorageInformation],
+                bool,
+            ],
+        ] = {
+            sg.WIN_CLOSED: lambda _, __, ___: False,
+            "calibration_switch": DevMode._switch_calibration_button,
+            "switch_cameras_switch": DevMode._switch_cameras_button,
+            "ball_color_switch": DevMode._switch_ball_color_button,
+            "send_target_distance_parameters": DevMode._refresh_target_distance_parameters,
+            "send_ball_distance_parameters": DevMode._refresh_ball_distance_parameters,
+            "send_focal_lengths": DevMode._refresh_focal_lengths,
+        }
+
+        action = actions.get(event)
+
+        if action is None:
+            self._refresh_non_reactive_elements(values, all_data)
         else:
-            all_data.target_hsv_range.hue.min = values["target_h_min"]
-            all_data.target_hsv_range.hue.max = values["target_h_max"]
-            all_data.target_hsv_range.saturation.min = values["target_s_min"]
-            all_data.target_hsv_range.saturation.max = values["target_s_max"]
-            all_data.target_hsv_range.value.min = values["target_v_min"]
-            all_data.target_hsv_range.value.max = values["target_v_max"]
-            all_data.red_ball_hsv_range.hue.min = values["red_ball_h_min"]
-            all_data.red_ball_hsv_range.hue.max = values["red_ball_h_max"]
-            all_data.red_ball_hsv_range.saturation.min = values["red_ball_s_min"]
-            all_data.red_ball_hsv_range.saturation.max = values["red_ball_s_max"]
-            all_data.red_ball_hsv_range.value.min = values["red_ball_v_min"]
-            all_data.red_ball_hsv_range.value.max = values["red_ball_v_max"]
-            all_data.blue_ball_hsv_range.hue.min = values["blue_ball_h_min"]
-            all_data.blue_ball_hsv_range.hue.max = values["blue_ball_h_max"]
-            all_data.blue_ball_hsv_range.saturation.min = values["blue_ball_s_min"]
-            all_data.blue_ball_hsv_range.saturation.max = values["blue_ball_s_max"]
-            all_data.blue_ball_hsv_range.value.min = values["blue_ball_v_min"]
-            all_data.blue_ball_hsv_range.value.max = values["blue_ball_v_max"]
-
-            self.window.Element("target_image").update(
-                data=self.target_camera_last_frame
-            )
-            self.window.Element("ball_image").update(data=self.ball_camera_last_frame)
-
-            self.window.Element("target_binary_image").update(
-                data=self.target_binary_last_frame
-            )
-            self.window.Element("ball_binary_image").update(
-                data=self.ball_binary_last_frame
-            )
-
-            self.window.Element("image_with_target").update(
-                data=self.last_frame_with_target
-            )
-            self.window.Element("image_with_ball").update(
-                data=self.last_frame_with_ball
-            )
-
-            self.window["target_found"].update(
-                f"Target was found: {str(self.target_found).upper()}"
-            )
-
-            self.window["ball_found"].update(
-                f"Ball was found: {str(self.ball_found).upper()}"
-            )
-
-            if self.target_found:
-
-                self.window["target_distance"].update(
-                    f"Target distance: {self.target_distance}cm"
-                )
-
-                self.window["target_angle"].update(
-                    f"Target angle: {self.target_angle}°"
-                )
-
-                self.window["launcher_angle"].update(
-                    f"Launcher angle: {self.launcher_angle}°"
-                )
-
-            else:
-
-                self.window["target_distance"].update("Target distance: --cm")
-
-                self.window["target_angle"].update("Target angle: --°")
-
-                self.window["launcher_angle"].update("Launcher angle: --°")
-
-            if self.ball_found:
-
-                self.window["ball_distance"].update(
-                    f"Ball distance: {self.ball_distance}cm"
-                )
-
-                self.window["ball_angle"].update(f"Ball angle: {self.ball_angle}°")
-
-            else:
-
-                self.window["ball_distance"].update("Ball distance: --cm")
-
-                self.window["ball_angle"].update("Ball angle: --°")
+            response = action(self.window, values, all_data)
+            if response is False:
+                return False
 
         DevMode.load_file(self.filepath, all_data)
 
