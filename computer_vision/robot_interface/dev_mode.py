@@ -109,7 +109,7 @@ class DevMode(RobotInterface):
         ]
 
         block_21 = [
-            [sg.Text("Target Camera")],
+            [sg.Text("Target Camera", font="bold")],
             [
                 sg.Text("H min: "),
                 sg.Slider(
@@ -179,7 +179,7 @@ class DevMode(RobotInterface):
         ]
 
         block_23 = [
-            [sg.Text("Ball Camera")],
+            [sg.Text("Ball Camera", font="bold")],
             [
                 sg.Text("H min: "),
                 sg.Slider(
@@ -321,14 +321,23 @@ class DevMode(RobotInterface):
         ]
 
         block_3 = [
-            [sg.Text("Target distance parameters")],
+            [sg.Text("Target distance parameters", font="bold")],
             [
                 sg.Text("a: "),
-                sg.InputText(key="target_distance_parameters_a"),
+                sg.InputText(
+                    key="target_distance_parameters_a",
+                    default_text=data.target_distance_parameters.a,
+                ),
                 sg.Text("b: "),
-                sg.InputText(key="target_distance_parameters_b"),
+                sg.InputText(
+                    key="target_distance_parameters_b",
+                    default_text=data.target_distance_parameters.b,
+                ),
                 sg.Text("c: "),
-                sg.InputText(key="target_distance_parameters_c"),
+                sg.InputText(
+                    key="target_distance_parameters_c",
+                    default_text=data.target_distance_parameters.c,
+                ),
                 sg.Button(
                     "SEND", button_color="green", key="send_target_distance_parameters"
                 ),
@@ -336,12 +345,18 @@ class DevMode(RobotInterface):
         ]
 
         block_4 = [
-            [sg.Text("Ball distance parameters")],
+            [sg.Text("Ball distance parameters", font="bold")],
             [
                 sg.Text("focal length: "),
-                sg.InputText(key="ball_distance_parameters_focal_length"),
+                sg.InputText(
+                    key="ball_distance_parameters_focal_length",
+                    default_text=data.ball_distance_parameters.focal_length,
+                ),
                 sg.Text("ball diameter: "),
-                sg.InputText(key="ball_distance_parameters_ball_diameter"),
+                sg.InputText(
+                    key="ball_distance_parameters_ball_diameter",
+                    default_text=data.ball_distance_parameters.ball_diameter,
+                ),
                 sg.Button(
                     "SEND", button_color="green", key="send_ball_distance_parameters"
                 ),
@@ -349,12 +364,18 @@ class DevMode(RobotInterface):
         ]
 
         block_5 = [
-            [sg.Text("Focal lengths")],
+            [sg.Text("Focal lengths", font="bold")],
             [
                 sg.Text("Target camera: "),
-                sg.InputText(key="target_camera_focal_length"),
+                sg.InputText(
+                    key="target_camera_focal_length",
+                    default_text=data.target_camera.focal_length,
+                ),
                 sg.Text("Ball camera: "),
-                sg.InputText(key="ball_camera_focal_length"),
+                sg.InputText(
+                    key="ball_camera_focal_length",
+                    default_text=data.ball_camera.focal_length,
+                ),
                 sg.Button("SEND", button_color="green", key="send_focal_lengths"),
             ],
         ]
