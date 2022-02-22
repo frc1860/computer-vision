@@ -17,6 +17,7 @@ from computer_vision.utils.image_processing import (
     process_ball_image,
     process_target_image,
     resize,
+    set_brightness,
 )
 
 
@@ -52,11 +53,22 @@ def main() -> None:
 
     robot_interface.start_interface()
 
+    switch_cameras = robot_interface.should_switch_cameras()
+
+    if switch_cameras:
+        ball_camera, target_camera = cameras
+    else:
+        target_camera, ball_camera = cameras
+
     target_hsv_range = robot_interface.get_target_hsv_range()
     red_ball_hsv_range = robot_interface.get_red_ball_hsv_range()
     blue_ball_hsv_range = robot_interface.get_blue_ball_hsv_range()
     target_focal_length = robot_interface.get_target_camera_focal_length()
     ball_focal_length = robot_interface.get_ball_camera_focal_length()
+    target_brightness = robot_interface.get_target_camera_brightness()
+    ball_brightness = robot_interface.get_ball_camera_brightness()
+    set_brightness(target_camera, target_brightness)
+    set_brightness(ball_camera, ball_brightness)
     target_distance_parameters = robot_interface.get_target_distance_parameters()
     ball_distance_parameters = robot_interface.get_ball_distance_parameters()
 
@@ -84,6 +96,10 @@ def main() -> None:
             blue_ball_hsv_range = robot_interface.get_blue_ball_hsv_range()
             target_focal_length = robot_interface.get_target_camera_focal_length()
             ball_focal_length = robot_interface.get_ball_camera_focal_length()
+            target_brightness = robot_interface.get_target_camera_brightness()
+            ball_brightness = robot_interface.get_ball_camera_brightness()
+            set_brightness(target_camera, target_brightness)
+            set_brightness(ball_camera, ball_brightness)
             target_distance_parameters = (
                 robot_interface.get_target_distance_parameters()
             )

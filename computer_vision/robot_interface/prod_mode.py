@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import numpy as np
 from cscore import CameraServer
 from networktables import NetworkTablesInstance
-from cscore import CameraServer
 
 from computer_vision.utils.internal_types import (
     BallDistanceParameters,
@@ -26,6 +25,7 @@ class TargetEntries:
     angle: typing.Any
     distance: typing.Any
     found: typing.Any
+    brightness: typing.Any
 
 
 @dataclass
@@ -42,6 +42,7 @@ class BallEntries:
     blue_distance: typing.Any
     red_found: typing.Any
     blue_found: typing.Any
+    brightness: typing.Any
 
 
 @dataclass
@@ -71,6 +72,7 @@ class ProdMode(RobotInterface):
                 angle=netTable.getEntry("/Target/Angle"),
                 distance=netTable.getEntry("/Target/Distance"),
                 found=netTable.getEntry("/Target/Found"),
+                brightness=netTable.getEntry("/Target/Brightness"),
             ),
             ball_entries=BallEntries(
                 resolution=netTable.getEntry("/Ball/Resolution"),
@@ -85,6 +87,7 @@ class ProdMode(RobotInterface):
                 blue_distance=netTable.getEntry("/Ball/BlueDistance"),
                 red_found=netTable.getEntry("/Ball/RedFound"),
                 blue_found=netTable.getEntry("/Ball/BlueFound"),
+                brightness=netTable.getEntry("/Ball/Brightness"),
             ),
             launcher_angle=netTable.getEntry("/LauncherAngle"),
         )
@@ -238,6 +241,12 @@ class ProdMode(RobotInterface):
 
     def get_ball_camera_focal_length(self) -> float:
         return self.allNetTableEntries.ball_entries.focal_length.getDouble(1)
+
+    def get_target_camera_brightness(self) -> float:
+        return self.allNetTableEntries.target_entries.brightness.getDouble(10)
+
+    def get_ball_camera_brightness(self) -> float:
+        return self.allNetTableEntries.ball_entries.brightness.getDouble(10)
 
     def get_ball_color(self) -> str:
         color_number = self.allNetTableEntries.ball_entries.ball_color.getDouble(1)
