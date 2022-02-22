@@ -742,6 +742,12 @@ class DevMode(RobotInterface):
         all_data = DevMode.extract_file(self.filepath)
         return all_data.ball_camera.focal_length
 
+    def get_target_camera_brightness(self) -> float:
+        return 10
+
+    def get_ball_camera_brightness(self) -> float:
+        return 10
+
     def get_ball_color(self) -> str:
         all_data = DevMode.extract_file(self.filepath)
         return all_data.ball_color

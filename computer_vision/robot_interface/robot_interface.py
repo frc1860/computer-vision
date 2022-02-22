@@ -92,6 +92,14 @@ class RobotInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_target_camera_brightness(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_ball_camera_brightness(self) -> float:
+        pass
+
+    @abstractmethod
     def get_ball_color(self) -> str:
         pass
 
