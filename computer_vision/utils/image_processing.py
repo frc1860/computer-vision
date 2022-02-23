@@ -21,6 +21,8 @@ def get_available_cameras() -> typing.List[cv2.VideoCapture]:
     available_indexes = [
         int(file[-1]) for file in os.listdir("/dev") if "video" in file
     ]
+    # TODO: Improve camera identification algorithm
+    available_indexes = [0, 2]
     captures = [cv2.VideoCapture(index) for index in available_indexes]
     available_captures = [capture for capture in captures if capture.read()[0]]
     return available_captures

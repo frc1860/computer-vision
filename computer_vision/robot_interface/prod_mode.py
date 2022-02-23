@@ -91,7 +91,7 @@ class ProdMode(RobotInterface):
         pass
 
     def refresh_interface(self) -> bool:
-        pass
+        return True
 
     def stop_interface(self) -> None:
         pass
@@ -144,7 +144,7 @@ class ProdMode(RobotInterface):
             v_min,
             v_max,
         ) = self.allNetTableEntries.target_entries.hsv_range.getDoubleArray(
-            [0, 256, 0, 256, 0, 256, 0, 256]
+            [0, 256, 0, 256, 0, 256]
         )
         return HsvRange(
             hue=Range(min=h_min, max=h_max),
@@ -161,7 +161,7 @@ class ProdMode(RobotInterface):
             v_min,
             v_max,
         ) = self.allNetTableEntries.ball_entries.red_hsv_range.getDoubleArray(
-            [0, 256, 0, 256, 0, 256, 0, 256]
+            [0, 256, 0, 256, 0, 256]
         )
         return HsvRange(
             hue=Range(min=h_min, max=h_max),
@@ -177,8 +177,8 @@ class ProdMode(RobotInterface):
             s_max,
             v_min,
             v_max,
-        ) = self.allNetTableEntries.ball_entries.ball_hsv_range.getDoubleArray(
-            [0, 256, 0, 256, 0, 256, 0, 256]
+        ) = self.allNetTableEntries.ball_entries.blue_hsv_range.getDoubleArray(
+            [0, 256, 0, 256, 0, 256]
         )
         return HsvRange(
             hue=Range(min=h_min, max=h_max),
@@ -192,7 +192,7 @@ class ProdMode(RobotInterface):
             b,
             c,
         ) = self.allNetTableEntries.target_entries.distance_parameters.getDoubleArray(
-            [0, 0, 0]
+            [1, 1, 1]
         )
         return TargetDistanceParameters(a=a, b=b, c=c)
 
@@ -200,22 +200,22 @@ class ProdMode(RobotInterface):
         (
             focal_length,
             ball_diameter,
-        ) = self.allNetTableEntries.target_entries.distance_parameters.getDoubleArray(
-            [0, 0]
+        ) = self.allNetTableEntries.ball_entries.distance_parameters.getDoubleArray(
+            [1, 1]
         )
         return BallDistanceParameters(
             focal_length=focal_length, ball_diameter=ball_diameter
         )
 
     def get_target_camera_focal_length(self) -> float:
-        return self.allNetTableEntries.target_entries.focal_length.getDouble(0)
+        return self.allNetTableEntries.target_entries.focal_length.getDouble(1)
 
     def get_ball_camera_focal_length(self) -> float:
-        return self.allNetTableEntries.ball_entries.focal_length.getDouble(0)
+        return self.allNetTableEntries.ball_entries.focal_length.getDouble(1)
 
-    def get_ball_color(self) -> typing.Literal["red", "blue"]:
-        color_number = self.allNetTableEntries.ball_entries.ball_color.getInteger(1)
-        color = {1: "red", 2: "blue"}[color_number]
+    def get_ball_color(self) -> str:
+        color_number = self.allNetTableEntries.ball_entries.ball_color.getDouble(1)
+        color = {1: "red", 2: "blue"}[int(color_number)]
         return color
 
     def send_target_angle(self, angle: float) -> None:

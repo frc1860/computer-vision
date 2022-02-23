@@ -22,3 +22,9 @@ all:
 
 run:
 	@python -m poetry run python main.py
+
+deploy:
+	@scp -r * pi@wpilibpi.local:/home/pi
+
+rev-deploy:
+	@scp -r pi@wpilibpi.local:/home/pi/* .
