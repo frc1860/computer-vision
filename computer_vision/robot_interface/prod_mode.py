@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 from cscore import CameraServer
 from networktables import NetworkTablesInstance
+from cscore import CameraServer
 
 from computer_vision.utils.internal_types import (
     BallDistanceParameters,
