@@ -2,6 +2,7 @@ import typing
 from dataclasses import dataclass
 
 import numpy as np
+from cscore import CameraServer
 from networktables import NetworkTablesInstance
 
 from computer_vision.utils.internal_types import (
@@ -87,6 +88,30 @@ class ProdMode(RobotInterface):
             launcher_angle=netTable.getEntry("/LauncherAngle"),
         )
 
+        self.cs = CameraServer.getInstance()
+        self.cs.enableLogging()
+
+        target_resolution = self.get_target_stream_resolution()
+        ball_resolution = self.get_ball_stream_resolution()
+
+        self.target_camera_stream = self.create_stream(
+            "TargetCamera", target_resolution
+        )
+        self.ball_camera_stream = self.create_stream("BallCamera", ball_resolution)
+        self.target_binary_stream = self.create_stream(
+            "TargetBinary", target_resolution
+        )
+        self.ball_binary_stream = self.create_stream("BallBinary", ball_resolution)
+        self.image_with_target_stream = self.create_stream(
+            "ImageWithTarget", target_resolution
+        )
+        self.image_with_ball_stream = self.create_stream(
+            "ImageWithBall", ball_resolution
+        )
+
+    def create_stream(self, name: str, resolution: Resolution) -> typing.Any:
+        return self.cs.putVideo(name, resolution.width, resolution.height)
+
     def start_interface(self) -> None:
         pass
 
@@ -118,22 +143,22 @@ class ProdMode(RobotInterface):
         return Resolution(width=width, height=height)
 
     def send_target_camera_frame(self, frame: np.ndarray) -> None:
-        pass
+        self.target_camera_stream.putFrame(frame)
 
     def send_ball_camera_frame(self, frame: np.ndarray) -> None:
-        pass
+        self.ball_camera_stream.putFrame(frame)
 
     def send_target_binary_frame(self, frame: np.ndarray) -> None:
-        pass
+        self.target_binary_stream.putFrame(frame)
 
     def send_ball_binary_frame(self, frame: np.ndarray) -> None:
-        pass
+        self.ball_binary_stream.putFrame(frame)
 
     def send_frame_with_target(self, frame: np.ndarray) -> None:
-        pass
+        self.image_with_target_stream.putFrame(frame)
 
     def send_frame_with_ball(self, frame: np.ndarray) -> None:
-        pass
+        self.image_with_ball_stream.putFrame(frame)
 
     def get_target_hsv_range(self) -> HsvRange:
         (
