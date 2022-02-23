@@ -45,7 +45,7 @@ class LocalStorageInformation:
     target_distance_parameters: TargetDistanceParameters = TargetDistanceParameters()
     ball_distance_parameters: BallDistanceParameters = BallDistanceParameters()
     switch_cameras: bool = False
-    ball_color: typing.Literal["red", "blue"] = "red"
+    ball_color: str = "red"
 
 
 class DevMode(RobotInterface):
@@ -742,7 +742,7 @@ class DevMode(RobotInterface):
         all_data = DevMode.extract_file(self.filepath)
         return all_data.ball_camera.focal_length
 
-    def get_ball_color(self) -> typing.Literal["red", "blue"]:
+    def get_ball_color(self) -> str:
         all_data = DevMode.extract_file(self.filepath)
         return all_data.ball_color
 

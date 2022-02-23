@@ -93,7 +93,7 @@ class RobotInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_ball_color(self) -> typing.Literal["red", "blue"]:
+    def get_ball_color(self) -> str:
         pass
 
     @abstractmethod
