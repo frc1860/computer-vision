@@ -22,11 +22,9 @@ from computer_vision.utils.image_processing import (
 )
 from computer_vision.utils.internal_types import (
     BallDistanceParameters,
-    BallImageProcessingResponse,
     HsvRange,
     TargetContourFilterParameters,
     TargetDistanceParameters,
-    TargetImageProcessingResponse,
 )
 
 
@@ -46,28 +44,6 @@ elif os.environ.get("ROBOT_INTERFACE", "prod") == "dev":
     )
 else:
     raise InvalidRobotInterface(os.environ.get("ROBOT_INTERFACE", "prod"))
-
-
-def send_calculation_results(
-    robot_interface: RobotInterface,
-    target_response: TargetImageProcessingResponse,
-    ball_response: BallImageProcessingResponse,
-    target_angle: float,
-    target_distance: float,
-    launcher_angle: float,
-    ball_angle: float,
-    ball_distance: float,
-) -> None:
-    robot_interface.send_if_target_was_found(target_response.found)
-    robot_interface.send_if_ball_was_found(ball_response.found)
-
-    if target_response.found:
-        robot_interface.send_target_angle(target_angle)
-        robot_interface.send_target_distance(target_distance)
-        robot_interface.send_launcher_angle(launcher_angle)
-    if ball_response.found:
-        robot_interface.send_ball_angle(ball_angle)
-        robot_interface.send_ball_distance(ball_distance)
 
 
 def main() -> None:
@@ -143,7 +119,10 @@ def main() -> None:
         )
         ball_response = process_ball_image(ball_frame, ball_hsv_range)
 
-        # making calculations
+        robot_interface.send_if_target_was_found(target_response.found)
+        robot_interface.send_if_ball_was_found(ball_response.found)
+
+        # making calculations and sending results
 
         if target_response.found:
             target_distance = calculate_target_distance(
@@ -156,6 +135,9 @@ def main() -> None:
                 camera_offset=0,
             )
             launcher_angle = calculate_launcher_angle(target_distance)
+            robot_interface.send_target_angle(target_angle)
+            robot_interface.send_target_distance(target_distance)
+            robot_interface.send_launcher_angle(launcher_angle)
 
         if ball_response.found:
             ball_distance = calculate_ball_distance(
@@ -166,6 +148,8 @@ def main() -> None:
                 ball_frame.shape[1],
                 camera_offset=0,
             )
+            robot_interface.send_ball_angle(ball_angle)
+            robot_interface.send_ball_distance(ball_distance)
 
         # feeding image streams
 
@@ -186,17 +170,6 @@ def main() -> None:
         )
         robot_interface.send_frame_with_ball(
             resize(ball_response.image_with_ball, ball_stream_resolution)
-        )
-
-        send_calculation_results(
-            robot_interface,
-            target_response,
-            ball_response,
-            target_angle,
-            target_distance,
-            launcher_angle,
-            ball_angle,
-            ball_distance,
         )
 
     robot_interface.stop_interface()
