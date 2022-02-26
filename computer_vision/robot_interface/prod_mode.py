@@ -10,10 +10,27 @@ from computer_vision.utils.internal_types import (
     HsvRange,
     Range,
     Resolution,
+    TargetContourFilterParameters,
     TargetDistanceParameters,
 )
 
 from .robot_interface import RobotInterface
+
+
+@dataclass
+class TargetContourFilterParametersEntries:
+    min_area: typing.Any
+    min_perimeter: typing.Any
+    min_width: typing.Any
+    max_width: typing.Any
+    min_height: typing.Any
+    max_height: typing.Any
+    min_solidity: typing.Any
+    max_solidity: typing.Any
+    min_vertex_count: typing.Any
+    max_vertex_count: typing.Any
+    min_ratio: typing.Any
+    max_ratio: typing.Any
 
 
 @dataclass
@@ -26,6 +43,8 @@ class TargetEntries:
     distance: typing.Any
     found: typing.Any
     brightness: typing.Any
+    exposure: typing.Any
+    contour_filter_parameters: TargetContourFilterParametersEntries
 
 
 @dataclass
@@ -43,11 +62,13 @@ class BallEntries:
     red_found: typing.Any
     blue_found: typing.Any
     brightness: typing.Any
+    exposure: typing.Any
 
 
 @dataclass
 class AllNetTableEntries:
     is_calibrating: typing.Any
+    fps: typing.Any
     switch_cameras: typing.Any
     target_entries: TargetEntries
     ball_entries: BallEntries
@@ -63,6 +84,7 @@ class ProdMode(RobotInterface):
         # Initializing network tables variables
         self.allNetTableEntries = AllNetTableEntries(
             is_calibrating=netTable.getEntry("/IsCalibrating"),
+            fps=netTable.getEntry("/Fps"),
             switch_cameras=netTable.getEntry("/SwitchCameras"),
             target_entries=TargetEntries(
                 resolution=netTable.getEntry("/Target/Resolution"),
@@ -73,6 +95,21 @@ class ProdMode(RobotInterface):
                 distance=netTable.getEntry("/Target/Distance"),
                 found=netTable.getEntry("/Target/Found"),
                 brightness=netTable.getEntry("/Target/Brightness"),
+                exposure=netTable.getEntry("/Target/Exposure"),
+                contour_filter_parameters=TargetContourFilterParametersEntries(
+                    min_area=netTable.getEntry("/Target/MinArea"),
+                    min_perimeter=netTable.getEntry("/Target/MinPerimeter"),
+                    min_width=netTable.getEntry("/Target/MinWidth"),
+                    max_width=netTable.getEntry("/Target/MaxWidth"),
+                    min_height=netTable.getEntry("/Target/MinHeight"),
+                    max_height=netTable.getEntry("/Target/MaxHeight"),
+                    min_solidity=netTable.getEntry("/Target/MinSolidity"),
+                    max_solidity=netTable.getEntry("/Target/MaxSolidity"),
+                    min_vertex_count=netTable.getEntry("/Target/MinVertexCount"),
+                    max_vertex_count=netTable.getEntry("/Target/MaxVertexCount"),
+                    min_ratio=netTable.getEntry("/Target/MinRatio"),
+                    max_ratio=netTable.getEntry("/Target/MaxRatio"),
+                ),
             ),
             ball_entries=BallEntries(
                 resolution=netTable.getEntry("/Ball/Resolution"),
@@ -88,6 +125,7 @@ class ProdMode(RobotInterface):
                 red_found=netTable.getEntry("/Ball/RedFound"),
                 blue_found=netTable.getEntry("/Ball/BlueFound"),
                 brightness=netTable.getEntry("/Ball/Brightness"),
+                exposure=netTable.getEntry("/Ball/Exposure"),
             ),
             launcher_angle=netTable.getEntry("/LauncherAngle"),
         )
@@ -124,6 +162,9 @@ class ProdMode(RobotInterface):
 
     def stop_interface(self) -> None:
         pass
+
+    def get_fps(self) -> int:
+        return self.allNetTableEntries.fps.getDouble(30)
 
     def should_switch_cameras(self) -> bool:
         return self.allNetTableEntries.switch_cameras.getBoolean(False)
@@ -179,6 +220,53 @@ class ProdMode(RobotInterface):
             hue=Range(min=h_min, max=h_max),
             saturation=Range(min=s_min, max=s_max),
             value=Range(min=v_min, max=v_max),
+        )
+
+    def get_target_contour_filter_parameters(self) -> TargetContourFilterParameters:
+        min_area = self.allNetTableEntries.target_entries.contour_filter_parameters.min_area.getDouble(
+            100
+        )
+        min_perimeter = self.allNetTableEntries.target_entries.contour_filter_parameters.min_perimeter.getDouble(
+            0
+        )
+        min_width = self.allNetTableEntries.target_entries.contour_filter_parameters.min_width.getDouble(
+            20
+        )
+        max_width = self.allNetTableEntries.target_entries.contour_filter_parameters.max_width.getDouble(
+            400
+        )
+        min_height = self.allNetTableEntries.target_entries.contour_filter_parameters.min_height.getDouble(
+            15
+        )
+        max_height = self.allNetTableEntries.target_entries.contour_filter_parameters.max_height.getDouble(
+            250
+        )
+        min_solidity = self.allNetTableEntries.target_entries.contour_filter_parameters.min_solidity.getDouble(
+            0
+        )
+        max_solidity = self.allNetTableEntries.target_entries.contour_filter_parameters.max_solidity.getDouble(
+            100
+        )
+        min_vertex_count = self.allNetTableEntries.target_entries.contour_filter_parameters.min_vertex_count.getDouble(
+            0
+        )
+        max_vertex_count = self.allNetTableEntries.target_entries.contour_filter_parameters.max_vertex_count.getDouble(
+            10500
+        )
+        min_ratio = self.allNetTableEntries.target_entries.contour_filter_parameters.min_ratio.getDouble(
+            0
+        )
+        max_ratio = self.allNetTableEntries.target_entries.contour_filter_parameters.max_ratio.getDouble(
+            1000
+        )
+        return TargetContourFilterParameters(
+            area=Range(min=min_area, max=100000),
+            perimeter=Range(min=min_perimeter, max=100000),
+            width=Range(min=min_width, max=max_width),
+            height=Range(min=min_height, max=max_height),
+            solidity=Range(min=min_solidity, max=max_solidity),
+            vertex_count=Range(min=min_vertex_count, max=max_vertex_count),
+            ratio=Range(min=min_ratio, max=max_ratio),
         )
 
     def get_red_ball_hsv_range(self) -> HsvRange:
@@ -243,10 +331,16 @@ class ProdMode(RobotInterface):
         return self.allNetTableEntries.ball_entries.focal_length.getDouble(1)
 
     def get_target_camera_brightness(self) -> float:
-        return self.allNetTableEntries.target_entries.brightness.getDouble(10)
+        return self.allNetTableEntries.target_entries.brightness.getDouble(0.5)
 
     def get_ball_camera_brightness(self) -> float:
-        return self.allNetTableEntries.ball_entries.brightness.getDouble(10)
+        return self.allNetTableEntries.ball_entries.brightness.getDouble(0.5)
+
+    def get_target_camera_exposure(self) -> float:
+        return self.allNetTableEntries.target_entries.exposure.getDouble(0.01)
+
+    def get_ball_camera_exposure(self) -> float:
+        return self.allNetTableEntries.ball_entries.exposure.getDouble(0.01)
 
     def get_ball_color(self) -> str:
         color_number = self.allNetTableEntries.ball_entries.ball_color.getDouble(1)

@@ -29,6 +29,17 @@ class HsvRange:
 
 
 @dataclass
+class TargetContourFilterParameters:
+    area: Range = Range(min=700, max=100000)
+    perimeter: Range = Range(min=0, max=100000)
+    width: Range = Range(min=80, max=750)
+    height: Range = Range(min=50, max=400)
+    solidity: Range = Range(min=0, max=100)
+    vertex_count: Range = Range(min=0, max=10500)
+    ratio: Range = Range(min=0, max=1000)
+
+
+@dataclass
 class TargetDistanceParameters:
     a: float = 0
     b: float = 0
