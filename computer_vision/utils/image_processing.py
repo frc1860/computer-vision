@@ -1,4 +1,5 @@
 import typing
+from functools import reduce
 
 import cv2
 import numpy as np
@@ -114,18 +115,20 @@ def filter_contour_by_vertex_count(
     return func
 
 
-def calculate_contour_offset(
-    frame_width: float,
-) -> typing.Callable[
-    [typing.List[typing.Any]], typing.Tuple[float, typing.List[typing.Any]]
-]:
-    def func(
-        contour: typing.List[typing.Any],
-    ) -> typing.Tuple[float, typing.List[typing.Any]]:
-        pos = calculate_contour_center(contour)
-        return (abs(frame_width / 2 - pos.x), contour)
+def get_max_rect(
+    accumulator: typing.Dict[str, Range], contour: typing.List[typing.Any]
+) -> typing.Dict[str, Range]:
 
-    return func
+    x, y, w, h = cv2.boundingRect(contour)
+    if x < accumulator["x"].min:
+        accumulator["x"].min = x
+    if x + w > accumulator["x"].max:
+        accumulator["x"].max = x + w
+    if y < accumulator["y"].min:
+        accumulator["y"].min = y
+    if y + h > accumulator["y"].max:
+        accumulator["y"].max = y + h
+    return accumulator
 
 
 def calculate_contour_center(contour: typing.Any) -> Position:
@@ -195,24 +198,32 @@ def process_target_image(
         )
     )
 
-    biggest_contours = list(
-        map(
-            lambda elem: elem[1],
-            sorted(
-                map(calculate_contour_offset(frame.shape[1]), filtered_contours),
-                key=lambda elem: elem[0],
-            ),
-        )
-    )
-
-    if len(biggest_contours) > 0:
-        biggest_contour = biggest_contours[0]
-        center = calculate_contour_center(biggest_contour)
-
+    if len(filtered_contours) > 0:
         # Drawing on the image where the code detected the target
         output_image = frame.copy()
-        cv2.circle(output_image, (center.x, center.y), 7, (0, 0, 255), 5)
-        cv2.drawContours(output_image, biggest_contours, 0, (255, 255, 0), 2)
+        cv2.drawContours(output_image, filtered_contours, 0, (255, 255, 0), 2)
+
+        max_rect = reduce(
+            get_max_rect,
+            filtered_contours,
+            {
+                "x": Range(min=0, max=frame.shape[1]),
+                "y": Range(min=0, max=frame.shape[0]),
+            },
+        )
+
+        cv2.rectangle(
+            output_image,
+            (max_rect["x"].min, max_rect["y"].min),
+            (max_rect["x"].max, max_rect["y"].max),
+            (0, 0, 255),
+            5,
+        )
+
+        center = Position(
+            x=(max_rect["x"].min + max_rect["x"].max) / 2,
+            y=(max_rect["y"].min + max_rect["y"].max) / 2,
+        )
 
         return TargetImageProcessingResponse(
             found=True,
@@ -276,9 +287,9 @@ def process_ball_image(
         cv2.HOUGH_GRADIENT,
         1,
         75,
-        param1=45,
-        param2=45,
-        minRadius=10,
+        param1=85,
+        param2=30,
+        minRadius=1,
         maxRadius=400,
     )
 
