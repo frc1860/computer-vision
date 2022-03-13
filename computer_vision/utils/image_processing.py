@@ -21,7 +21,7 @@ class CouldNotGetFrame(Exception):
 
 def get_available_cameras() -> typing.List[cv2.VideoCapture]:
     # TODO: Improve camera identification algorithm
-    available_indexes = [0, 2]
+    available_indexes = [0]
     captures = [cv2.VideoCapture(index) for index in available_indexes]
     return captures
 
@@ -162,7 +162,7 @@ def process_target_image(
     # Filtering color
     mask = cv2.inRange(hsv_image, lower_hsv_threshold, upper_hsv_threshold)
 
-    _, contours, __ = cv2.findContours(
+    contours, _ = cv2.findContours(
         mask, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_SIMPLE
     )
 
@@ -203,12 +203,13 @@ def process_target_image(
         output_image = frame.copy()
         cv2.drawContours(output_image, filtered_contours, 0, (255, 255, 0), 2)
 
+        x, y, w, h = cv2.boundingRect(filtered_contours[0])
         max_rect = reduce(
             get_max_rect,
             filtered_contours,
             {
-                "x": Range(min=0, max=frame.shape[1]),
-                "y": Range(min=0, max=frame.shape[0]),
+                "x": Range(min=x, max=x + w),
+                "y": Range(min=y, max=y + h),
             },
         )
 
