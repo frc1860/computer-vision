@@ -6,6 +6,7 @@ from computer_vision.utils.internal_types import (
     BallDistanceParameters,
     HsvRange,
     Resolution,
+    TargetContourFilterParameters,
     TargetDistanceParameters,
 )
 
@@ -21,6 +22,10 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def stop_interface(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_fps(self) -> int:
         pass
 
     @abstractmethod
@@ -68,6 +73,10 @@ class RobotInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_target_contour_filter_parameters(self) -> TargetContourFilterParameters:
+        pass
+
+    @abstractmethod
     def get_red_ball_hsv_range(self) -> HsvRange:
         pass
 
@@ -97,6 +106,14 @@ class RobotInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def get_ball_camera_brightness(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_target_camera_exposure(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_ball_camera_exposure(self) -> float:
         pass
 
     @abstractmethod

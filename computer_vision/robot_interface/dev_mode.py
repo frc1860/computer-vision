@@ -15,7 +15,9 @@ from computer_vision.utils.internal_types import (
     BallDistanceParameters,
     HsvRange,
     Position,
+    Range,
     Resolution,
+    TargetContourFilterParameters,
     TargetDistanceParameters,
 )
 
@@ -674,6 +676,9 @@ class DevMode(RobotInterface):
     def stop_interface(self) -> None:
         self.window.close()
 
+    def get_fps(self) -> int:
+        return 4
+
     def should_switch_cameras(self) -> bool:
         all_data = DevMode.extract_file(self.filepath)
         return all_data.switch_cameras
@@ -726,6 +731,17 @@ class DevMode(RobotInterface):
         all_data = DevMode.extract_file(self.filepath)
         return all_data.blue_ball_hsv_range
 
+    def get_target_contour_filter_parameters(self) -> TargetContourFilterParameters:
+        return TargetContourFilterParameters(
+            area=Range(min=0, max=100000),
+            perimeter=Range(min=0, max=100000),
+            width=Range(min=0, max=400),
+            height=Range(min=0, max=250),
+            solidity=Range(min=0, max=100),
+            vertex_count=Range(min=0, max=10500),
+            ratio=Range(min=0, max=1000),
+        )
+
     def get_target_distance_parameters(self) -> TargetDistanceParameters:
         all_data = DevMode.extract_file(self.filepath)
         return all_data.target_distance_parameters
@@ -743,10 +759,16 @@ class DevMode(RobotInterface):
         return all_data.ball_camera.focal_length
 
     def get_target_camera_brightness(self) -> float:
-        return 10
+        return 100
 
     def get_ball_camera_brightness(self) -> float:
-        return 10
+        return 100
+
+    def get_target_camera_exposure(self) -> float:
+        return 0.1
+
+    def get_ball_camera_exposure(self) -> float:
+        return 0.1
 
     def get_ball_color(self) -> str:
         all_data = DevMode.extract_file(self.filepath)

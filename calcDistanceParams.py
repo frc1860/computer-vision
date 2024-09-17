@@ -4,8 +4,8 @@ from time import time
 import numpy as np
 from scipy.optimize import minimize, root_scalar
 
-D = [92, 119, 148, 171, 198, 238, 284]
-Y = [63, 192, 313, 357, 509, 540, 641]
+D = [200 - 20, 300 - 20, 400 - 20, 413 - 20, 600 - 20]
+Y = [28.5, 97.5, 137.5, 145.5, 194.5]
 n = len(D)
 
 initialTime = time()
@@ -25,7 +25,7 @@ def initialGuessFunction(a):
     )
 
 
-initialSolution = root_scalar(initialGuessFunction, x0=100, bracket=[1, 500])
+initialSolution = root_scalar(initialGuessFunction, x0=160, bracket=[1, 500])
 
 
 def squaredErrorFunction(x):

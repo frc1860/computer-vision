@@ -1,5 +1,5 @@
-import os
 import typing
+from functools import reduce
 
 import cv2
 import numpy as np
@@ -8,7 +8,9 @@ from .internal_types import (
     BallImageProcessingResponse,
     HsvRange,
     Position,
+    Range,
     Resolution,
+    TargetContourFilterParameters,
     TargetImageProcessingResponse,
 )
 
@@ -18,14 +20,10 @@ class CouldNotGetFrame(Exception):
 
 
 def get_available_cameras() -> typing.List[cv2.VideoCapture]:
-    available_indexes = [
-        int(file[-1]) for file in os.listdir("/dev") if "video" in file
-    ]
     # TODO: Improve camera identification algorithm
-    available_indexes = [0, 2]
+    available_indexes = [0]
     captures = [cv2.VideoCapture(index) for index in available_indexes]
-    available_captures = [capture for capture in captures if capture.read()[0]]
-    return available_captures
+    return captures
 
 
 def get_frame(capture: cv2.VideoCapture) -> np.ndarray:
@@ -43,14 +41,202 @@ def set_brightness(capture: cv2.VideoCapture, brightness: float) -> None:
     capture.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
 
 
+def set_exposure(capture: cv2.VideoCapture, exposure: float) -> None:
+    capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+    # capture.set(cv2.CAP_PROP_EXPOSURE, exposure)
+
+
+def set_fps(capture: cv2.VideoCapture, fps: int) -> None:
+    capture.set(cv2.CAP_PROP_FPS, fps)
+
+
+def filter_contour_by_area(
+    min_area: float,
+) -> typing.Callable[[typing.List[typing.Any]], bool]:
+    def func(contour: typing.List[typing.Any]) -> bool:
+        area = cv2.contourArea(contour)
+        return area >= min_area
+
+    return func
+
+
+def filter_contour_by_perimeter(
+    min_perimeter: float,
+) -> typing.Callable[[typing.List[typing.Any]], bool]:
+    def func(contour: typing.List[typing.Any]) -> bool:
+        perimeter = cv2.arcLength(contour, True)
+        return perimeter >= min_perimeter
+
+    return func
+
+
+def filter_contour_by_size(
+    width: Range,
+    height: Range,
+    ratio: Range,
+) -> typing.Callable[[typing.List[typing.Any]], bool]:
+    def func(contour: typing.List[typing.Any]) -> bool:
+        _, __, w, h = cv2.boundingRect(contour)
+        r = w / h
+        return (
+            w >= width.min
+            and w <= width.max
+            and h >= height.min
+            and h <= height.max
+            and r >= ratio.min
+            and r <= ratio.max
+        )
+
+    return func
+
+
+def filter_contour_by_solidity(
+    solidity: Range,
+) -> typing.Callable[[typing.List[typing.Any]], bool]:
+    def func(contour: typing.List[typing.Any]) -> bool:
+        area = cv2.contourArea(contour)
+        hull = cv2.convexHull(contour)
+        solid = 100000000
+        try:
+            solid = 100 * area / cv2.contourArea(hull)
+        except Exception:
+            pass
+        return solid >= solidity.min and solid <= solidity.max
+
+    return func
+
+
+def filter_contour_by_vertex_count(
+    vertex_count: Range,
+) -> typing.Callable[[typing.List[typing.Any]], bool]:
+    def func(contour: typing.List[typing.Any]) -> bool:
+        return len(contour) >= vertex_count.min and len(contour) <= vertex_count.max
+
+    return func
+
+
+def get_max_rect(
+    accumulator: typing.Dict[str, Range], contour: typing.List[typing.Any]
+) -> typing.Dict[str, Range]:
+
+    x, y, w, h = cv2.boundingRect(contour)
+    if x < accumulator["x"].min:
+        accumulator["x"].min = x
+    if x + w > accumulator["x"].max:
+        accumulator["x"].max = x + w
+    if y < accumulator["y"].min:
+        accumulator["y"].min = y
+    if y + h > accumulator["y"].max:
+        accumulator["y"].max = y + h
+    return accumulator
+
+
+def calculate_contour_center(contour: typing.Any) -> Position:
+    x, y, w, h = cv2.boundingRect(contour)
+    return Position(x=int(x + w / 2), y=int(y + h / 2))
+
+
 def process_target_image(
-    frame: np.ndarray, hsv_range: HsvRange
+    frame: np.ndarray,
+    hsv_range: HsvRange,
+    contour_filter_parameters: TargetContourFilterParameters,
 ) -> TargetImageProcessingResponse:
-    # TODO: Re-implement target identification
+
+    hsv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    lower_hsv_threshold = np.array(
+        [
+            hsv_range.hue.min,
+            hsv_range.saturation.min,
+            hsv_range.value.min,
+        ]
+    )
+    upper_hsv_threshold = np.array(
+        [
+            hsv_range.hue.max,
+            hsv_range.saturation.max,
+            hsv_range.value.max,
+        ]
+    )
+
+    # Filtering color
+    mask = cv2.inRange(hsv_image, lower_hsv_threshold, upper_hsv_threshold)
+
+    contours, _ = cv2.findContours(
+        mask, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    filtered_contours_by_area = list(
+        filter(filter_contour_by_area(contour_filter_parameters.area.min), contours)
+    )
+    filtered_contours_by_perimeter = list(
+        filter(
+            filter_contour_by_perimeter(contour_filter_parameters.perimeter.min),
+            filtered_contours_by_area,
+        )
+    )
+    filtered_contours_by_size = list(
+        filter(
+            filter_contour_by_size(
+                contour_filter_parameters.width,
+                contour_filter_parameters.height,
+                contour_filter_parameters.ratio,
+            ),
+            filtered_contours_by_perimeter,
+        )
+    )
+    filtered_contours_by_solidity = list(
+        filter(
+            filter_contour_by_solidity(contour_filter_parameters.solidity),
+            filtered_contours_by_size,
+        )
+    )
+    filtered_contours = list(
+        filter(
+            filter_contour_by_vertex_count(contour_filter_parameters.vertex_count),
+            filtered_contours_by_solidity,
+        )
+    )
+
+    if len(filtered_contours) > 0:
+        # Drawing on the image where the code detected the target
+        output_image = frame.copy()
+        cv2.drawContours(output_image, filtered_contours, 0, (255, 255, 0), 2)
+
+        x, y, w, h = cv2.boundingRect(filtered_contours[0])
+        max_rect = reduce(
+            get_max_rect,
+            filtered_contours,
+            {
+                "x": Range(min=x, max=x + w),
+                "y": Range(min=y, max=y + h),
+            },
+        )
+
+        cv2.rectangle(
+            output_image,
+            (max_rect["x"].min, max_rect["y"].min),
+            (max_rect["x"].max, max_rect["y"].max),
+            (0, 0, 255),
+            5,
+        )
+
+        center = Position(
+            x=(max_rect["x"].min + max_rect["x"].max) / 2,
+            y=(max_rect["y"].min + max_rect["y"].max) / 2,
+        )
+
+        return TargetImageProcessingResponse(
+            found=True,
+            image_with_target=output_image,
+            binary_image=mask,
+            target_position=center,
+        )
+
     return TargetImageProcessingResponse(
         found=False,
         image_with_target=frame,
-        binary_image=frame,
+        binary_image=mask,
         target_position=Position(x=0, y=0),
     )
 
@@ -102,9 +288,9 @@ def process_ball_image(
         cv2.HOUGH_GRADIENT,
         1,
         75,
-        param1=45,
-        param2=45,
-        minRadius=10,
+        param1=85,
+        param2=30,
+        minRadius=1,
         maxRadius=400,
     )
 
@@ -139,5 +325,5 @@ def process_ball_image(
         image_with_ball=frame_to_draw,
         binary_image=dilated_mask,
         ball_position=ball_position,
-        ball_diameter=0,
+        ball_diameter=radius * 2,
     )
